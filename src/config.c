@@ -191,10 +191,10 @@ bool load_configuration(const char *override_configpath, config_load_t load_type
         x.child_border = draw_util_hex_to_color(cbackground);  \
     } while (0)
 
-    config.client.background = draw_util_hex_to_color("#000000");
-    INIT_COLOR(config.client.focused, "#4c7899", "#285577", "#ffffff", "#2e9ef4");
-    INIT_COLOR(config.client.focused_inactive, "#333333", "#5f676a", "#ffffff", "#484e50");
-    INIT_COLOR(config.client.unfocused, "#333333", "#222222", "#888888", "#292d2e");
+    config.client.background = draw_util_hex_to_color("#000");
+    INIT_COLOR(config.client.focused, "#d0cecd", "#d0cecd", "#ffffffff", "#2e9ef4");
+    INIT_COLOR(config.client.focused_inactive, "#d2d0cc", "#d2d0cc", "#b6b6b6", "#484e50");
+    INIT_COLOR(config.client.unfocused, "#d2d0cc", "#d2d0cc", "#b6b6b6", "#292d2e");
     INIT_COLOR(config.client.urgent, "#2f343a", "#900000", "#ffffff", "#900000");
     config.client.got_focused_tab_title = false;
 
@@ -210,8 +210,8 @@ bool load_configuration(const char *override_configpath, config_load_t load_type
 
     config.default_border = BS_NORMAL;
     config.default_floating_border = BS_NORMAL;
-    config.default_border_width = logical_px(2);
-    config.default_floating_border_width = logical_px(2);
+    config.default_border_width = logical_px(3);
+    config.default_floating_border_width = logical_px(3);
     /* Set default_orientation to NO_ORIENTATION for auto orientation. */
     config.default_orientation = NO_ORIENTATION;
 
