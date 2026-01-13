@@ -359,22 +359,45 @@ void x_window_kill(xcb_window_t window, kill_window_t kill_window) {
 
 static void x_draw_title_border(Con *con, struct deco_render_params *p, surface_t *dest_surface) {
     Rect *dr = &(con->deco_rect);
+    
+    /* Define colors for each pixel layer (outer to inner)
+     * Left/Top border colors */
+    color_t border_colors_light[3] = {
+        {0.835, 0.808, 0.769, 1.0},  /* Pixel 1 - d5cec4 (lightest/outermost) */
+        {0.992, 1.0, 0.988, 1.0},    /* Pixel 2 - fdfffc (middle) */
+        {0.824, 0.816, 0.800, 1.0}   /* Pixel 3 - d2d0cc (darkest/innermost) */
+    };
+    
+    /* Right/Bottom border colors */
+    color_t border_colors_dark[3] = {
+        {0.816, 0.808, 0.804, 1.0},  /* Pixel 3 - d0cecd (lightest/innermost) */
+        {0.510, 0.506, 0.506, 1.0},  /* Pixel 2 - 828181 (middle) */
+        {0.255, 0.251, 0.259, 1.0}  /* Pixel 1 - 414042 (darkest/outermost) */
+    };
 
-    /* Left */
-    draw_util_rectangle(dest_surface, p->color->border,
-                        dr->x, dr->y, 1, dr->height);
+        /* Top border - 3 pixels tall */
+    for (int i = 0; i < 3; i++) {
+        draw_util_rectangle(dest_surface, border_colors_light[i],
+                            dr->x, dr->y + i, dr->width, 1);
+    }
 
-    /* Right */
-    draw_util_rectangle(dest_surface, p->color->border,
-                        dr->x + dr->width - 1, dr->y, 1, dr->height);
+    /* Bottom border - 3 pixels tall */
+    for (int i = 0; i < 1; i++) {
+        draw_util_rectangle(dest_surface, border_colors_dark[0],
+                            dr->x, dr->y + dr->height - 1 + i, dr->width, 1);
+    }
 
-    /* Top */
-    draw_util_rectangle(dest_surface, p->color->border,
-                        dr->x, dr->y, dr->width, 1);
+    /* Left border - 3 pixels wide */
+    for (int i = 0; i < 3; i++) {
+        draw_util_rectangle(dest_surface, border_colors_light[i],
+                            dr->x + i, dr->y, 1, dr->height);
+    }
 
-    /* Bottom */
-    draw_util_rectangle(dest_surface, p->color->border,
-                        dr->x, dr->y + dr->height - 1, dr->width, 1);
+    /* Right border - 3 pixels wide */
+    for (int i = 0; i < 3; i++) {
+        draw_util_rectangle(dest_surface, border_colors_dark[i],
+                            dr->x + dr->width - 3 + i, dr->y, 1, dr->height);
+    }
 }
 
 static void x_draw_decoration_after_title(Con *con, struct deco_render_params *p, surface_t *dest_surface) {
@@ -398,6 +421,61 @@ static void x_draw_decoration_after_title(Con *con, struct deco_render_params *p
 
     /* Redraw the border. */
     x_draw_title_border(con, p, dest_surface);
+}
+
+/*
+ * Draw the window border with 3D beveled effect (light left/top, dark right/bottom).
+ *
+ */
+static void x_draw_window_border(Con *con, struct deco_render_params *p, surface_t *dest_surface, Rect br) {
+    /* Light colors for left/top (beveled effect) */
+    color_t border_light[3] = {
+        {0.835, 0.808, 0.769, 1.0},  /* d5cec4 - outer */
+        {0.992, 1.0, 0.988, 1.0},    /* fdfffc - middle */
+        {0.824, 0.816, 0.800, 1.0}   /* d2d0cc - inner */
+    };
+    
+    /* Dark colors for right/bottom (beveled effect) */
+    color_t border_dark[3] = {
+        {0.816, 0.808, 0.804, 1.0},  /* Pixel 3 - d0cecd (lightest/innermost) */
+        {0.510, 0.506, 0.506, 1.0},  /* Pixel 2 - 828181 (middle) */
+        {0.255, 0.251, 0.259, 1.0}  /* Pixel 1 - 414042 (darkest/outermost) */
+
+    };
+
+    int border_width = br.x;  /* Left border width */
+    
+    /* Draw left border with layered effect */
+    if (!(con_adjacent_borders(con) & ADJ_LEFT_SCREEN_EDGE)) {
+        for (int i = 0; i < border_width && i < 3; i++) {
+            draw_util_rectangle(dest_surface, border_light[i],
+                                i, 0, 1, con->rect.height);
+        }
+    }
+
+    /* Draw right border with layered effect */
+    if (!(con_adjacent_borders(con) & ADJ_RIGHT_SCREEN_EDGE)) {
+        for (int i = 0; i < border_width && i < 3; i++) {
+            draw_util_rectangle(dest_surface, border_dark[i],
+                                con->rect.width - border_width + i, 0, 1, con->rect.height);
+        }
+    }
+
+    /* Draw top border with layered effect */
+    if (!(con_adjacent_borders(con) & ADJ_UPPER_SCREEN_EDGE)) {
+        for (int i = 0; i < border_width && i < 3; i++) {
+            draw_util_rectangle(dest_surface, border_light[i],
+                                0, i, con->rect.width, 1);
+        }
+    }
+
+    /* Draw bottom border with layered effect */
+    if (!(con_adjacent_borders(con) & ADJ_LOWER_SCREEN_EDGE)) {
+        for (int i = 0; i < border_width && i < 3; i++) {
+            draw_util_rectangle(dest_surface, border_dark[i],
+                                0, con->rect.height - border_width + i, con->rect.width, 1);
+        }
+    }
 }
 
 /*
@@ -569,21 +647,9 @@ void x_draw_decoration(Con *con) {
         /* Fill the border. We don’t just fill the whole rectangle because some
          * children are not freely resizable and we want their background color
          * to "shine through". */
-        xcb_rectangle_t rectangles[4];
-        size_t rectangles_count = x_get_border_rectangles(con, rectangles);
-        for (size_t i = 0; i < rectangles_count; i++) {
-            draw_util_rectangle(&(con->frame_buffer), p->color->child_border,
-                                rectangles[i].x,
-                                rectangles[i].y,
-                                rectangles[i].width,
-                                rectangles[i].height);
-        }
-
-        /* Highlight the side of the border at which the next window will be
-         * opened if we are rendering a single window within a split container
-         * (which is undistinguishable from a single window outside a split
-         * container otherwise. */
+        /* Use new beveled border style */
         Rect br = con_border_style_rect(con);
+        x_draw_window_border(con, p, &(con->frame_buffer), br);
         if (TAILQ_NEXT(con, nodes) == NULL &&
             TAILQ_PREV(con, nodes_head, nodes) == NULL &&
             con->parent->type != CT_FLOATING_CON) {
@@ -640,7 +706,7 @@ void x_draw_decoration(Con *con) {
     struct Window *win = con->window;
 
     const int deco_width = (int)con->deco_rect.width;
-    const int title_padding = logical_px(2);
+    const int title_padding = logical_px(6);
 
     int mark_width = 0;
     if (config.show_marks && !TAILQ_EMPTY(&(con->marks_head))) {
