@@ -13,3 +13,7 @@ i3 is a tiling window manager for X11.
 For more information about i3, please see [the project's website](https://i3wm.org/) and [online documentation](https://i3wm.org/docs/).
 
 For information about contributing to i3, please see [CONTRIBUTING.md](.github/CONTRIBUTING.md).
+
+Screenshots
+===========
+![screenshot of a window](image.png)
