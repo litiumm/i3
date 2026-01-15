@@ -192,7 +192,7 @@ bool load_configuration(const char *override_configpath, config_load_t load_type
     } while (0)
 
     config.client.background = draw_util_hex_to_color("#000");
-    INIT_COLOR(config.client.focused, "#d0cecd", "#d0cecd", "#ffffffff", "#2e9ef4");
+    INIT_COLOR(config.client.focused, "#d0cecd", "#5d90b9ff", "#ffffffff", "#2e9ef4");
     INIT_COLOR(config.client.focused_inactive, "#d2d0cc", "#d2d0cc", "#b6b6b6", "#484e50");
     INIT_COLOR(config.client.unfocused, "#d2d0cc", "#d2d0cc", "#b6b6b6", "#292d2e");
     INIT_COLOR(config.client.urgent, "#2f343a", "#900000", "#ffffff", "#900000");

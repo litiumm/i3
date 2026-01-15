@@ -436,10 +436,11 @@ static void x_draw_window_border(Con *con, struct deco_render_params *p, surface
     };
     
     /* Dark colors for right/bottom (beveled effect) */
-    color_t border_dark[3] = {
+    color_t border_dark[4] = {
         {0.816, 0.808, 0.804, 1.0},  /* Pixel 3 - d0cecd (lightest/innermost) */
         {0.510, 0.506, 0.506, 1.0},  /* Pixel 2 - 828181 (middle) */
-        {0.255, 0.251, 0.259, 1.0}  /* Pixel 1 - 414042 (darkest/outermost) */
+        {0.255, 0.251, 0.259, 1.0},  /* Pixel 1 - 414042 (darkest/outermost) */
+        {0.0, 0.0, 0.0, 1.0}               /* Black accent */
 
     };
 
@@ -476,6 +477,13 @@ static void x_draw_window_border(Con *con, struct deco_render_params *p, surface
                                 0, con->rect.height - border_width + i, con->rect.width, 1);
         }
     }
+
+    draw_util_rectangle(dest_surface, border_dark[1],
+                    con->rect.width - border_width + 1, con->rect.height - border_width, 1, 2);
+    draw_util_rectangle(dest_surface, border_dark[2],
+                    con->rect.width - border_width + 2, con->rect.height - border_width, 1, 3);
+
+
 }
 
 /*
